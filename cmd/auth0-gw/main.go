@@ -124,7 +124,7 @@ func sync(cfg *config.Config, email string) error {
 		"AUTH0_CLIENT_SECRET":   cfg.Auth0.ClientSecret,
 		"AUTH0_CONNECTION_NAME": cfg.Auth0.Connection,
 		"AUTH0_USER_PID":        cfg.Auth0.UserPID,
-		"AUTH0_USER_EMAIL":      cfg.Auth0.UserEmail,
+		"AUTH0_USER_EMAIL":      email,
 		"AUTH0_ROLES":           "false",
 	}
 

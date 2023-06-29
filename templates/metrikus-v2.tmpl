@@ -8,11 +8,8 @@
       "properties":{
         "email": "{{ $.email }}",
         "picture": "{{ $.picture }}",
-        "user_props": {
-          {{$s := separator ", "}}{{ range $k, $v := $.user_metadata }}{{call $s}}"{{ $k }}": "{{ $v }}"{{ end }}
-        },
-        "app_props": {
-          {{$s := separator ", "}}{{ range $k, $v := $.app_metadata }}{{call $s}}"{{ $k }}": "{{ $v }}"{{ end }}
+        "roles": {
+          {{$s := separator ", "}}{{ range $k, $v := $.app_metadata.roles }}{{call $s}}"{{ $k }}": "{{ $v }}"{{ end }}
         }
       }
     },
