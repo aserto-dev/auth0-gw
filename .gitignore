@@ -16,3 +16,7 @@
 
 # go workspace file
 go.work
+
+# env files
+.env
+.envrc
