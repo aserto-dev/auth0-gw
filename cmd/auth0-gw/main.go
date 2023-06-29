@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"os"
+	"time"
 
 	"github.com/aserto-dev/auth0-gw/pkg/config"
 	"github.com/auth0/go-auth0/management"
@@ -73,7 +74,6 @@ func receive(ctx context.Context, event cloudevents.Event) {
 		log.Printf("user: %s\n", u.GetEmail())
 
 		go sync(cfg, *u.Email)
-		// log.Printf("%s\n", event)
 
 	case "post-change-password":
 		var u management.User
@@ -84,7 +84,6 @@ func receive(ctx context.Context, event cloudevents.Event) {
 		log.Printf("user: %s\n", u.GetEmail())
 
 		go sync(cfg, *u.Email)
-		// log.Printf("%s\n", event)
 
 	case "pre-user-registration":
 		var u management.User
@@ -95,7 +94,6 @@ func receive(ctx context.Context, event cloudevents.Event) {
 		log.Printf("user: %s\n", u.GetEmail())
 
 		go sync(cfg, *u.Email)
-		// log.Printf("%s\n", event)
 
 	case "post-user-registration":
 		var u management.User
@@ -106,14 +104,13 @@ func receive(ctx context.Context, event cloudevents.Event) {
 		log.Printf("user: %s\n", u.GetEmail())
 
 		go sync(cfg, *u.Email)
-		// log.Printf("%s\n", event)
 
 	default:
 		log.Printf("default handler: %s", event)
 	}
 }
 
-func sync(cfg *config.Config, email string) error {
+func sync(cfg *config.Config, email string) {
 	env := map[string]string{
 		"DS_TEMPLATE_FILE":      cfg.Loader.Template,
 		"DIRECTORY_HOST":        cfg.Directory.Host,
@@ -131,7 +128,9 @@ func sync(cfg *config.Config, email string) error {
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 
 	cmd := "ds-load"
-	args := []string{"exec", "auth0"}
+	args := []string{"exec", "auth0", "--no-rate-limit"}
+
+	defer duration(track("start sync " + email))
 
 	ran, err := sh.Exec(env, os.Stdout, os.Stderr, cmd, args...)
 	if !ran {
@@ -140,5 +139,12 @@ func sync(cfg *config.Config, email string) error {
 	if err != nil {
 		log.Err(err).Msgf("command %s failed", cmd)
 	}
-	return nil
+}
+
+func track(msg string) (string, time.Time) {
+	return msg, time.Now()
+}
+
+func duration(msg string, start time.Time) {
+	log.Printf("%v: %v\n", msg, time.Since(start))
 }
