@@ -2,7 +2,7 @@ FROM alpine
 
 RUN apk add --no-cache bash
 
-EXPOSE 8080
+EXPOSE 8383
 
 WORKDIR /app
 

@@ -1,7 +1,6 @@
 package loader
 
 import (
-	"io"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -49,7 +48,7 @@ func (l *Loader) Sync(a *config.Auth0) {
 	defer l.timer(time.Now(), a, "sync finished")
 
 	// spawn ds-load to execute fetch, transform and import into directory.
-	ran, err := sh.Exec(env, io.Discard, os.Stderr, cmd, args...)
+	ran, err := sh.Exec(env, os.Stdout, os.Stderr, cmd, args...)
 	if !ran {
 		log.Warn().Msgf("command %s did not run", cmd)
 	}

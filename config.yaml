@@ -1,6 +1,6 @@
 ---
 gateway:
-  port: 8080
+  port: 8383
   path: /events
 
 directory:
