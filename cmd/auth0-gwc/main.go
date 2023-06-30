@@ -2,10 +2,12 @@ package main
 
 import (
 	"context"
-	"log"
+	"os"
 
 	"github.com/auth0/go-auth0/management"
 	cloudevents "github.com/cloudevents/sdk-go/v2"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	flag "github.com/spf13/pflag"
 )
 
@@ -18,13 +20,25 @@ func main() {
 	)
 	flag.StringVarP(&eventType, "event-type", "e", "", "event type [post-login | post-change-password | pre-user-registration | post-user-registration | sync]")
 	flag.StringVarP(&userEmail, "user-email", "u", "", "user email")
-	flag.StringVarP(&target, "target", "t", "http://auth0-gw.eastus.cloudapp.azure.com:8383/events", "target url")
+	flag.StringVarP(&target, "target", "t", "", "target url")
 	flag.StringVarP(&source, "source", "s", "auth0.com", "event source")
 	flag.Parse()
 
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+
+	if target == "" {
+		log.Fatal().Msg("--target not set")
+	}
+	if source == "" {
+		log.Fatal().Msg("--source not set")
+	}
+	if eventType == "" {
+		log.Fatal().Msg("--event-type not set")
+	}
+
 	c, err := cloudevents.NewClientHTTP()
 	if err != nil {
-		log.Fatalf("failed to create client, %v", err)
+		log.Fatal().Err(err).Msg("create http client")
 	}
 
 	user := management.User{
@@ -36,7 +50,8 @@ func main() {
 	event.SetSource(source)
 	event.SetType(eventType)
 	if err := event.SetData(cloudevents.ApplicationJSON, user); err != nil {
-		log.Println(err)
+		log.Error().Err(err).Msg("set data")
+		os.Exit(1)
 	}
 
 	// Set a target.
@@ -44,9 +59,9 @@ func main() {
 
 	// Send that Event.
 	if result := c.Send(ctx, event); cloudevents.IsUndelivered(result) {
-		log.Fatalf("failed to send, %v", result)
+		log.Error().Msgf("send %v", result)
 	} else {
-		log.Printf("sent: %v", event)
-		log.Printf("result: %v", result)
+		log.Info().Msgf("sent: %v", event)
+		log.Info().Msgf("result: %v", result)
 	}
 }

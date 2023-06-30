@@ -6,7 +6,8 @@ EXPOSE 8383
 
 WORKDIR /app
 
-COPY auth0-gw /app/
+COPY auth0-gw /app
+COPY auth0-gwc /app
 COPY bin/amd64/ds-load /app
 COPY bin/amd64/ds-load-auth0 /app
 

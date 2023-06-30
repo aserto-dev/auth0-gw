@@ -76,6 +76,14 @@ func (s *Service) dispatch(ctx context.Context, event cloudevents.Event) {
 			s.load.Sync(&req)
 		}()
 
+	case "sync":
+		go func() {
+			req := *s.cfg.Auth0
+			req.UserPID = ""
+			req.UserEmail = ""
+			s.load.Sync(&req)
+		}()
+
 	default:
 		log.Error().Msgf("unknown event type %s", event.Context.GetType())
 		return

@@ -8,7 +8,7 @@ exports.onExecutePostUserRegistration = async (event, api) => {
     const { httpTransport, emitterFor, CloudEvent } = require("cloudevents");
 
     // Create an emitter to send events to a receiver
-    const emit = emitterFor(httpTransport("http://auth0-gw.eastus.cloudapp.azure.com:8383/events"));
+    const emit = emitterFor(httpTransport("http://<auth0-gw-hostname>:8383/events"));
 
     const type = 'post-user-registration';
     const source = 'auth0.com';
