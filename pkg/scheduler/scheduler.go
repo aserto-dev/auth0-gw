@@ -69,10 +69,8 @@ func (s *Scheduler) next(interval *time.Ticker) {
 }
 
 func (s *Scheduler) task() {
-	log.Info().Time("in task", time.Now().UTC()).Msg("scheduler")
 	req := *s.cfg.Auth0
 	req.UserEmail = ""
 	req.UserPID = ""
 	s.load.Sync(&req)
-	log.Info().Time("end task", time.Now().UTC()).Msg("scheduler")
 }

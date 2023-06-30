@@ -33,7 +33,7 @@ tasks:
   
   run:
     cmds:
-      - ./dist/build_{{OS}}_{{ARCH}}/{{.BIN}} {{.CLI_ARGS}}
+      - ./dist/{{.BIN}}_{{OS}}_{{ARCH}}/{{.BIN}} {{.CLI_ARGS}}
   
   clean:
     cmds:

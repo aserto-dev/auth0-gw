@@ -6,13 +6,14 @@ env:
   - REPO=auth0-gw
 
 before:
+  # https://goreleaser.com/customization/hooks/
   hooks:
 
 builds:
-  -
-    id: build
-    main: ./cmd/{{.ProjectName}}
-    binary: "{{.ProjectName}}"
+  # https://goreleaser.com/customization/build/
+  - id: auth0-gw
+    main: ./cmd/auth0-gw
+    binary: auth0-gw
     goos:
       - darwin
       - linux
@@ -28,27 +29,63 @@ builds:
     ldflags:
       - -s
       - -w
-      - -X github.com/{{.Env.ORG}}/{{.Env.REPO}}/pkg/version.ver={{.Version}}
-      - -X github.com/{{.Env.ORG}}/{{.Env.REPO}}/pkg/version.commit={{.ShortCommit}}
-      - -X github.com/{{.Env.ORG}}/{{.Env.REPO}}/pkg/version.date={{.Date}}
-    mod_timestamp: '{{ .CommitTimestamp }}'
+      - -X github.com/{{ .Env.ORG }}/{{ .Env.REPO }}/pkg/version.ver={{.Version}}
+      - -X github.com/{{ .Env.ORG }}/{{ .Env.REPO }}/pkg/version.commit={{.ShortCommit}}
+      - -X github.com/{{ .Env.ORG }}/{{ .Env.REPO }}/pkg/version.date={{.Date}}
+    mod_timestamp: "{{ .CommitTimestamp }}"
+    hooks:
+      post:
+        -  
+  - id: auth0-gwc
+    main: ./cmd/auth0-gwc
+    binary: auth0-gwc
+    goos:
+      - darwin
+      - linux
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    env:
+      - CGO_ENABLED=0
+    ignore:
+      - goos: windows
+        goarch: arm64
+    ldflags:
+      - -s
+      - -w
+      - -X github.com/{{ .Env.ORG }}/{{ .Env.REPO }}/pkg/version.ver={{.Version}}
+      - -X github.com/{{ .Env.ORG }}/{{ .Env.REPO }}/pkg/version.commit={{.ShortCommit}}
+      - -X github.com/{{ .Env.ORG }}/{{ .Env.REPO }}/pkg/version.date={{.Date}}
+    mod_timestamp: "{{ .CommitTimestamp }}"
 
 archives:
+  # https://goreleaser.com/customization/archive/
   - format: zip
+    builds:
+    - auth0-gw
+    - auth0-gwc
     rlcp: true
     files:
-      - LICENSE.md
+      - LICENSE
       - README.md
     name_template: >-
       {{.ProjectName}}{{ .Version }}_{{ .Os }}_{{- if eq .Arch "amd64" }}x86_64{{- else }}{{ .Arch }}{{ end }}
 
 checksum:
+  # https://goreleaser.com/customization/checksum/
   name_template: 'checksums.txt'
 
 snapshot:
+  # https://goreleaser.com/customization/snapshots/
   name_template: "{{ .Tag }}"
 
+source:
+  # https://goreleaser.com/customization/source/
+  enabled: false
+
 changelog:
+  # https://goreleaser.com/customization/changelog/
   sort: asc
   filters:
     exclude:
@@ -56,4 +93,74 @@ changelog:
       - '^test:'
 
 release:
-  disable: true
+  # https://goreleaser.com/customization/release/
+  github:
+    owner: "{{ .Env.ORG }}"
+    name: "{{ .Env.REPO }}"
+
+  draft: false
+  prerelease: false
+  name_template: "{{.ProjectName}} {{.Tag}}"
+
+blobs:
+  # https://goreleaser.com/customization/blob/
+
+brews:
+  # https://goreleaser.com/customization/homebrew/
+
+dockers:
+  # https://goreleaser.com/customization/docker/
+  - use: buildx
+    goos: linux
+    goarch: amd64
+    image_templates:
+      - &amd64-image "{{ .Env.REGISTRY }}/{{ .Env.ORG }}/{{ .Env.REPO }}:{{ .Version }}-amd64"
+    skip_push: false
+    dockerfile: Dockerfile.goreleaser
+    build_flag_templates:
+      - "--platform=linux/amd64"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.source=https://github.com/{{ .Env.ORG }}/{{ .Env.REPO }}"
+      - "--label=org.opencontainers.image.description=Auth0 Gateway"
+      - "--label=org.opencontainers.image.licenses=Apache-2.0"
+    extra_files:
+      - "config.yaml"
+      - "templates/transform.tmpl"
+      - "bin/amd64/ds-load"
+      - "bin/amd64/ds-load-auth0"
+  
+  - use: buildx
+    goos: linux
+    goarch: arm64
+    image_templates:
+      - &arm64-image "{{ .Env.REGISTRY }}/{{ .Env.ORG }}/{{ .Env.REPO }}:{{ .Version }}-arm64"
+    skip_push: false
+    dockerfile: Dockerfile.goreleaser
+    build_flag_templates:
+      - "--platform=linux/arm64/v8"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.source=https://github.com/{{ .Env.ORG }}/{{ .Env.REPO }}"
+      - "--label=org.opencontainers.image.description=Auth0 Gateway"
+      - "--label=org.opencontainers.image.licenses=Apache-2.0"
+    extra_files:
+      - "config.yaml"
+      - "templates/transform.tmpl"
+      - "bin/amd64/ds-load"
+      - "bin/amd64/ds-load-auth0"
+
+docker_manifests:
+  # https://goreleaser.com/customization/docker_manifest/
+  - name_template: "{{ .Env.REGISTRY }}/{{ .Env.ORG }}/{{ .Env.REPO }}:latest"
+    image_templates: [*amd64-image, *arm64-image]
+  - name_template: "{{ .Env.REGISTRY }}/{{ .Env.ORG }}/{{ .Env.REPO }}:{{ .Major }}"
+    image_templates: [*amd64-image, *arm64-image]
+  - name_template: "{{ .Env.REGISTRY }}/{{ .Env.ORG }}/{{ .Env.REPO }}:{{ .Major }}.{{ .Minor }}"
+    image_templates: [*amd64-image, *arm64-image]
+  - name_template: "{{ .Env.REGISTRY }}/{{ .Env.ORG }}/{{ .Env.REPO }}:{{ .Major }}.{{ .Minor }}.{{ .Patch }}"
+    image_templates: [*amd64-image, *arm64-image]

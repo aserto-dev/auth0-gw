@@ -1,0 +1,13 @@
+FROM alpine
+
+RUN apk add --no-cache bash
+
+EXPOSE 8080
+
+WORKDIR /app
+
+COPY auth0-gw /app/
+COPY bin/amd64/ds-load /app
+COPY bin/amd64/ds-load-auth0 /app
+
+ENTRYPOINT ["./auth0-gw"]
