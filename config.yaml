@@ -5,7 +5,7 @@ gateway:
 
 directory:
   host: directory.prod.aserto.com:8443
-  api_key: <read-write directory service API key >
+  api_key: <read-write directory service API key>
   tenant_id: <tenant-id uuid>
   insecure: false
 
