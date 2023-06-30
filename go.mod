@@ -5,6 +5,7 @@ go 1.20
 require (
 	github.com/auth0/go-auth0 v0.17.2
 	github.com/cloudevents/sdk-go/v2 v2.14.0
+	github.com/go-co-op/gocron v1.30.0
 	github.com/magefile/mage v1.15.0
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/pkg/errors v0.9.1
@@ -16,7 +17,6 @@ require (
 require (
 	github.com/PuerkitoBio/rehttp v1.1.0 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
-	github.com/go-co-op/gocron v1.30.0 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/uuid v1.1.2 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
