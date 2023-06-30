@@ -1,0 +1,22 @@
+---
+gateway:
+  port: 8383
+  path: /events
+
+directory:
+  host: directory.prod.aserto.com:8443
+  api_key: <read-write directory service API key >
+  tenant_id: <tenant-id uuid>
+  insecure: false
+
+auth0:
+  domain: <auth0 domain name>
+  client_id: <auth0 client id>
+  client_secret: <authj0 client secret>
+
+loader:
+  bin_path: /app/auth0-gw/bin
+  template: /app/auth0-gw/templates/transform.tmpl
+
+scheduler:
+  interval: 15m
