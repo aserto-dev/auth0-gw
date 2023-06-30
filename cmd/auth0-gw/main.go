@@ -3,148 +3,52 @@ package main
 import (
 	"context"
 	"os"
-	"time"
+	"os/signal"
 
 	"github.com/aserto-dev/auth0-gw/pkg/config"
-	"github.com/auth0/go-auth0/management"
-	cloudevents "github.com/cloudevents/sdk-go/v2"
-	"github.com/cloudevents/sdk-go/v2/protocol/http"
-	"github.com/magefile/mage/sh"
-	"github.com/mitchellh/mapstructure"
+	"github.com/aserto-dev/auth0-gw/pkg/scheduler"
+	"github.com/aserto-dev/auth0-gw/pkg/service"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	flag "github.com/spf13/pflag"
-	"github.com/spf13/viper"
 )
 
-var cfg *config.Config
-
 func main() {
+	// zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+	log.Info().Msg("starting auth0-gw")
+
 	var configFile string
 	flag.StringVarP(&configFile, "config", "c", "", "path to config.yaml file")
 	flag.Parse()
 
-	v := viper.New()
-
-	v.SetConfigType("yaml")
-	v.AddConfigPath(".")
-	v.SetConfigFile(configFile)
-
-	if err := v.ReadInConfig(); err != nil {
-		log.Fatal().Err(err).Msgf("loading config file %s", configFile)
-	}
-
-	cfg = new(config.Config)
-	err := v.UnmarshalExact(cfg, func(dc *mapstructure.DecoderConfig) {
-		dc.TagName = "json"
-	})
+	cfg, err := config.Load(configFile)
 	if err != nil {
-		log.Fatal().Err(err).Msgf("loading config file %s", configFile)
+		log.Fatal().Err(err).Msgf("loading config")
 	}
 
 	ctx := context.Background()
-	p, err := cloudevents.NewHTTP(http.WithPort(cfg.Gateway.Port), http.WithPath(cfg.Gateway.Path))
-	if err != nil {
-		log.Error().Err(err).Msg("failed to create protocol")
-	}
+	ctx, cancel := signal.NotifyContext(ctx, os.Interrupt)
+	defer cancel()
 
-	c, err := cloudevents.NewClient(p)
-	if err != nil {
-		log.Error().Err(err).Msg("failed to create client")
-	}
+	go func() {
+		sched := scheduler.New(ctx, cfg)
+		defer sched.Stop()
 
-	log.Info().Msgf("listen on :%d%s\n", p.Port, p.Path)
-	if err := c.StartReceiver(ctx, receive); err != nil {
-		log.Fatal().Err(err).Msg("failed to start listener")
-	}
-}
-
-func receive(ctx context.Context, event cloudevents.Event) {
-	switch event.Context.GetType() {
-	case "sync":
-		log.Printf("sync:\n")
-		go sync(cfg, "")
-
-	case "post-login":
-		var u management.User
-		if err := u.UnmarshalJSON(event.Data()); err != nil {
-			log.Printf("err: %s\n", err)
+		if err := sched.Start(); err != nil {
+			log.Fatal().Err(err).Msg("starting scheduler")
 		}
-		log.Printf("post-login:\n")
-		log.Printf("user: %s\n", u.GetEmail())
+	}()
 
-		go sync(cfg, *u.Email)
+	go func() {
+		svc := service.New(ctx, cfg)
+		defer svc.Stop()
 
-	case "post-change-password":
-		var u management.User
-		if err := u.UnmarshalJSON(event.Data()); err != nil {
-			log.Printf("err: %s\n", err)
+		if err := svc.Start(); err != nil {
+			log.Fatal().Err(err).Msg("starting service")
 		}
-		log.Printf("post-change-password:\n")
-		log.Printf("user: %s\n", u.GetEmail())
+	}()
 
-		go sync(cfg, *u.Email)
-
-	case "pre-user-registration":
-		var u management.User
-		if err := u.UnmarshalJSON(event.Data()); err != nil {
-			log.Printf("err: %s\n", err)
-		}
-		log.Printf("pre-user-registration:\n")
-		log.Printf("user: %s\n", u.GetEmail())
-
-		go sync(cfg, *u.Email)
-
-	case "post-user-registration":
-		var u management.User
-		if err := u.UnmarshalJSON(event.Data()); err != nil {
-			log.Printf("err: %s\n", err)
-		}
-		log.Printf("post-user-registration:\n")
-		log.Printf("user: %s\n", u.GetEmail())
-
-		go sync(cfg, *u.Email)
-
-	default:
-		log.Printf("default handler: %s", event)
-	}
-}
-
-func sync(cfg *config.Config, email string) {
-	env := map[string]string{
-		"DS_TEMPLATE_FILE":      cfg.Loader.Template,
-		"DIRECTORY_HOST":        cfg.Directory.Host,
-		"DIRECTORY_API_KEY":     cfg.Directory.APIKey,
-		"DIRECTORY_TENANT_ID":   cfg.Directory.TenantID,
-		"AUTH0_DOMAIN":          cfg.Auth0.Domain,
-		"AUTH0_CLIENT_ID":       cfg.Auth0.ClientID,
-		"AUTH0_CLIENT_SECRET":   cfg.Auth0.ClientSecret,
-		"AUTH0_CONNECTION_NAME": cfg.Auth0.Connection,
-		"AUTH0_USER_PID":        cfg.Auth0.UserPID,
-		"AUTH0_USER_EMAIL":      email,
-		"AUTH0_ROLES":           "false",
-	}
-
-	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
-
-	cmd := "ds-load"
-	args := []string{"exec", "auth0", "--no-rate-limit"}
-
-	defer duration(track("start sync " + email))
-
-	ran, err := sh.Exec(env, os.Stdout, os.Stderr, cmd, args...)
-	if !ran {
-		log.Warn().Msgf("command %s did not run", cmd)
-	}
-	if err != nil {
-		log.Err(err).Msgf("command %s failed", cmd)
-	}
-}
-
-func track(msg string) (string, time.Time) {
-	return msg, time.Now()
-}
-
-func duration(msg string, start time.Time) {
-	log.Printf("%v: %v\n", msg, time.Since(start))
+	// wait for context to be canceled
+	<-ctx.Done()
 }

@@ -35,7 +35,9 @@ func main() {
 	event := cloudevents.NewEvent()
 	event.SetSource(source)
 	event.SetType(eventType)
-	event.SetData(cloudevents.ApplicationJSON, user)
+	if err := event.SetData(cloudevents.ApplicationJSON, user); err != nil {
+		log.Println(err)
+	}
 
 	// Set a target.
 	ctx := cloudevents.ContextWithTarget(context.Background(), target)
