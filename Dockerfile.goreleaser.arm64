@@ -1,0 +1,14 @@
+FROM alpine
+
+RUN apk add --no-cache bash github-cli
+
+EXPOSE 8383
+
+WORKDIR /app
+
+COPY auth0-gw /app
+COPY auth0-gwc /app
+COPY bin/arm64/ds-load /app
+COPY bin/arm64/ds-load-auth0 /app
+
+ENTRYPOINT ["./auth0-gw"]
