@@ -39,6 +39,7 @@ tasks:
     cmds:
       - rm -rf ./dist
       - rm -rf ./.ext
+      - rm -rf ./bin
   
   deps:
     cmds:
