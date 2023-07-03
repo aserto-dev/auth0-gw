@@ -1,6 +1,6 @@
 FROM alpine
 
-RUN apk add --no-cache bash github-cli
+RUN apk add --no-cache bash
 
 EXPOSE 8383
 
