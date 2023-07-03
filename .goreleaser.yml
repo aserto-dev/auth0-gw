@@ -11,8 +11,8 @@ before:
   - rm -rf bin
   - mkdir -p bin/amd64
   - mkdir -p bin/arm64go
-  - scripts/download.sh linux amd64
-  - scripts/download.sh linux arm64
+  - scripts/gh-download-release.sh aserto-dev ds-load linux amd64
+  - scripts/gh-download-release.sh aserto-dev ds-load linux arm64
   - unzip bin/ds-load-amd64.zip -d bin/amd64
   - unzip bin/ds-load-arm64.zip -d bin/arm64
 
