@@ -19,6 +19,12 @@ tasks:
     preconditions:
       - test -f .ext/gobin/goreleaser
 
+  release:
+    cmds:
+      - .ext/gobin/goreleaser release --clean --snapshot
+    preconditions:
+      - test -f .ext/gobin/goreleaser
+
   lint:
     cmds:
       - .ext/gobin/golangci-lint run

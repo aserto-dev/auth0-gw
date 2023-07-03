@@ -11,8 +11,8 @@ before:
   - rm -rf bin
   - mkdir -p bin/amd64
   - mkdir -p bin/arm64go
-  - gh release download --repo github.com/aserto-dev/ds-load --pattern 'ds-load_*linux_x86_64*' --clobber --output bin/ds-load-amd64.zip
-  - gh release download --repo github.com/aserto-dev/ds-load --pattern 'ds-load_*linux_arm64*' --clobber --output bin/ds-load-arm64.zip
+  - scripts/download.sh linux amd64
+  - scripts/download.sh linux arm64
   - unzip bin/ds-load-amd64.zip -d bin/amd64
   - unzip bin/ds-load-arm64.zip -d bin/arm64
 
