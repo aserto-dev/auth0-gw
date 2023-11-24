@@ -1,6 +1,7 @@
 package config
 
 import (
+	"strings"
 	"time"
 
 	"github.com/mitchellh/mapstructure"
@@ -55,11 +56,16 @@ func Load(file string) (*Config, error) {
 	v.AddConfigPath(".")
 	v.SetConfigFile(file)
 
+	v.SetEnvPrefix("AUTH0_GW")
+	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+
 	v.SetDefault("scheduler.interval", "5m")
 
 	if err := v.ReadInConfig(); err != nil {
 		return nil, errors.Wrapf(err, "loading config file %s", file)
 	}
+
+	v.AutomaticEnv()
 
 	cfg := &Config{}
 	err := v.UnmarshalExact(cfg, func(dc *mapstructure.DecoderConfig) {
