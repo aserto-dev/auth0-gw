@@ -18,7 +18,10 @@ func main() {
 		source    string
 		userEmail string
 	)
-	flag.StringVarP(&eventType, "event-type", "e", "", "event type [post-login | post-change-password | pre-user-registration | post-user-registration | sync]")
+	flag.StringVarP(
+		&eventType, "event-type", "e", "",
+		"event type [post-login | post-change-password | pre-user-registration | post-user-registration | sync]",
+	)
 	flag.StringVarP(&userEmail, "user-email", "u", "", "user email")
 	flag.StringVarP(&target, "target", "t", "", "target url")
 	flag.StringVarP(&source, "source", "s", "auth0.com", "event source")

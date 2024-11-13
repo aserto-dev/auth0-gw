@@ -1,6 +1,8 @@
 module github.com/aserto-dev/auth0-gw
 
-go 1.20
+go 1.22
+
+toolchain go1.23.2
 
 require (
 	github.com/auth0/go-auth0 v0.17.2
