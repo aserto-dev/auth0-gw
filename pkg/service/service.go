@@ -14,20 +14,18 @@ import (
 )
 
 type Service struct {
-	ctx  context.Context
 	cfg  *config.Config
 	load *loader.Loader
 }
 
-func New(ctx context.Context, cfg *config.Config) *Service {
+func New(cfg *config.Config) *Service {
 	return &Service{
-		ctx:  ctx,
 		cfg:  cfg,
 		load: loader.New(cfg),
 	}
 }
 
-func (s *Service) Start() error {
+func (s *Service) Start(ctx context.Context) error {
 	p, err := cloudevents.NewHTTP(
 		http.WithPort(s.cfg.Gateway.Port),
 		http.WithPath(s.cfg.Gateway.Path),
@@ -42,7 +40,7 @@ func (s *Service) Start() error {
 	}
 
 	log.Info().Msgf("listen on :%d%s", p.Port, p.Path)
-	if err := c.StartReceiver(s.ctx, s.dispatch); err != nil {
+	if err := c.StartReceiver(ctx, s.dispatch); err != nil {
 		return errors.Wrap(err, "failed to start listener")
 	}
 

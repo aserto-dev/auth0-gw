@@ -47,19 +47,19 @@ func main() {
 	defer cancel()
 
 	go func() {
-		sched := scheduler.New(ctx, cfg)
+		sched := scheduler.New(cfg)
 		defer sched.Stop()
 
-		if err := sched.Start(); err != nil {
+		if err := sched.Start(ctx); err != nil {
 			log.Fatal().Err(err).Msg("starting scheduler")
 		}
 	}()
 
 	go func() {
-		svc := service.New(ctx, cfg)
+		svc := service.New(cfg)
 		defer svc.Stop()
 
-		if err := svc.Start(); err != nil {
+		if err := svc.Start(ctx); err != nil {
 			log.Fatal().Err(err).Msg("starting service")
 		}
 	}()

@@ -1,3 +1,4 @@
+---
 # yaml-language-server: $schema=https://taskfile.dev/schema.json
 version: '3'
 
@@ -30,36 +31,36 @@ tasks:
       - .ext/gobin/golangci-lint run
     preconditions:
       - test -f .ext/gobin/golangci-lint
-  
+
   test:
     cmds:
       - .ext/gobin/gotestsum --format short-verbose -- -count=1 -v ./...
     preconditions:
       - test -f .ext/gobin/gotestsum
-  
+
   run:
     cmds:
       - ./dist/{{.BIN}}_{{OS}}_{{ARCH}}/{{.BIN}} {{.CLI_ARGS}}
-  
+
   clean:
     cmds:
       - rm -rf ./dist
       - rm -rf ./.ext
       - rm -rf ./bin
-  
+
   deps:
     cmds:
       - task: install-goreleaser
       - task: install-golangci-lint
       - task: install-gotestsum
-  
+
   install-goreleaser:
     internal: true
     cmds:
       - task: go-install
         vars:
-          PACKAGE: github.com/goreleaser/goreleaser
-          VERSION: v1.18.2
+          PACKAGE: github.com/goreleaser/goreleaser/v2
+          VERSION: v2.3.2
 
   install-golangci-lint:
     internal: true
@@ -67,7 +68,7 @@ tasks:
       - task: go-install
         vars:
           PACKAGE: github.com/golangci/golangci-lint/cmd/golangci-lint
-          VERSION: v1.52.2
+          VERSION: v1.61.0
 
   install-gotestsum:
     internal: true
@@ -75,7 +76,7 @@ tasks:
       - task: go-install
         vars:
           PACKAGE: gotest.tools/gotestsum
-          VERSION: v1.10.0
+          VERSION: v1.11.0
 
   go-install:
     internal: true
@@ -83,4 +84,3 @@ tasks:
       GOBIN: "{{.ROOT_DIR}}/.ext/gobin"
     cmds:
       - go install {{.PACKAGE}}@{{.VERSION}}
-

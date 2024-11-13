@@ -10,29 +10,27 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+const tickInterval = time.Second * 15
+
 type Scheduler struct {
-	ctx  context.Context
 	cfg  *config.Config
 	load *loader.Loader
 }
 
-func New(ctx context.Context, cfg *config.Config) *Scheduler {
+func New(cfg *config.Config) *Scheduler {
 	sched := gocron.NewScheduler(time.UTC)
 	sched.SingletonModeAll()
 
 	return &Scheduler{
-		ctx:  ctx,
 		cfg:  cfg,
 		load: loader.New(cfg),
 	}
 }
 
-func (s *Scheduler) Start() error {
+func (s *Scheduler) Start(ctx context.Context) error {
 	log.Info().Msg("start scheduler")
 
-	go s.next(time.NewTicker(
-		time.Duration(15) * time.Second),
-	)
+	go s.next(ctx, time.NewTicker(tickInterval))
 
 	return nil
 }
@@ -40,12 +38,12 @@ func (s *Scheduler) Start() error {
 func (s *Scheduler) Stop() {
 }
 
-func (s *Scheduler) next(interval *time.Ticker) {
+func (s *Scheduler) next(ctx context.Context, interval *time.Ticker) {
 	defer interval.Stop()
 
 	for {
 		select {
-		case <-s.ctx.Done():
+		case <-ctx.Done():
 			log.Warn().Time("done", time.Now().UTC()).Msg("scheduler")
 			return
 		case t := <-interval.C:

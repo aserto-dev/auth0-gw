@@ -1,3 +1,5 @@
+---
+version: 2
 project_name: auth0-gw
 
 env:
@@ -8,13 +10,13 @@ env:
 before:
   # https://goreleaser.com/customization/hooks/
   hooks:
-  - rm -rf bin
-  - mkdir -p bin/amd64
-  - mkdir -p bin/arm64go
-  - scripts/gh-download-release.sh aserto-dev ds-load linux amd64
-  - scripts/gh-download-release.sh aserto-dev ds-load linux arm64
-  - unzip bin/ds-load-amd64.zip -d bin/amd64
-  - unzip bin/ds-load-arm64.zip -d bin/arm64
+    - rm -rf bin
+    - mkdir -p bin/amd64
+    - mkdir -p bin/arm64go
+    - scripts/gh-download-release.sh aserto-dev ds-load linux amd64
+    - scripts/gh-download-release.sh aserto-dev ds-load linux arm64
+    - unzip bin/ds-load-amd64.zip -d bin/amd64
+    - unzip bin/ds-load-arm64.zip -d bin/arm64
 
 builds:
   # https://goreleaser.com/customization/build/
@@ -68,9 +70,8 @@ archives:
   # https://goreleaser.com/customization/archive/
   - format: zip
     builds:
-    - auth0-gw
-    - auth0-gwc
-    rlcp: true
+      - auth0-gw
+      - auth0-gwc
     files:
       - LICENSE
       - README.md
@@ -83,7 +84,7 @@ checksum:
 
 snapshot:
   # https://goreleaser.com/customization/snapshots/
-  name_template: "{{ .Tag }}"
+  version_template: "{{ incpatch .Version }}-{{ .ShortCommit }}{{ if .IsGitDirty }}-dirty{{ end }}"
 
 source:
   # https://goreleaser.com/customization/source/
@@ -107,11 +108,11 @@ release:
   prerelease: false
   name_template: "{{.ProjectName}} {{.Tag}}"
 
+# https://goreleaser.com/customization/blob/
 blobs:
-  # https://goreleaser.com/customization/blob/
 
+# https://goreleaser.com/customization/homebrew/
 brews:
-  # https://goreleaser.com/customization/homebrew/
 
 dockers:
   # https://goreleaser.com/customization/docker/
@@ -154,7 +155,7 @@ dockers:
     extra_files:
       - "bin/arm64/ds-load"
       - "bin/arm64/ds-load-auth0"
-  
+
 docker_manifests:
   # https://goreleaser.com/customization/docker_manifest/
   - name_template: "{{ .Env.REGISTRY }}/{{ .Env.ORG }}/{{ .Env.REPO }}:latest"
