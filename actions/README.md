@@ -1,6 +1,6 @@
 ## Auth0 Action Definitions
 
-The actions have a dependency on the [cloudevents](https://www.npmjs.com/package/cloudevents) tested with @7.0.1, see for details:
+The actions have a dependency on the [cloudevents](https://www.npmjs.com/package/cloudevents) tested with cloudevents@8.0.2, see for details:
 
 * https://www.npmjs.com/package/cloudevents
 * https://github.com/cloudevents/sdk-javascript

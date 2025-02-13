@@ -8,53 +8,68 @@ vars:
   BIN: auth0-gw
 
 tasks:
+  default:
+    desc: list available commands
+    cmds:
+      - task: help
+        silent: true
+
   build:
+    desc: build (single-target)
     cmds:
       - .ext/gobin/goreleaser build --clean --single-target --snapshot
     preconditions:
       - test -f .ext/gobin/goreleaser
 
   build-all:
+    desc: build (all targets)
     cmds:
       - .ext/gobin/goreleaser build --clean --snapshot
     preconditions:
       - test -f .ext/gobin/goreleaser
 
   release:
+    desc: release
     cmds:
       - .ext/gobin/goreleaser release --clean --snapshot
     preconditions:
       - test -f .ext/gobin/goreleaser
 
   lint:
+    desc: lint
     cmds:
       - .ext/gobin/golangci-lint run
     preconditions:
       - test -f .ext/gobin/golangci-lint
 
   test:
+    desc: test
     cmds:
       - .ext/gobin/gotestsum --format short-verbose -- -count=1 -v ./...
     preconditions:
       - test -f .ext/gobin/gotestsum
 
   run:
+    desc: run
     cmds:
       - ./dist/{{.BIN}}_{{OS}}_{{ARCH}}/{{.BIN}} {{.CLI_ARGS}}
 
   clean:
+    desc: clean
     cmds:
       - rm -rf ./dist
       - rm -rf ./.ext
       - rm -rf ./bin
 
   deps:
+    desc: install dependencies
     cmds:
       - task: install-goreleaser
       - task: install-golangci-lint
       - task: install-gotestsum
 
   install-goreleaser:
+    desc: install go-releaser
     internal: true
     cmds:
       - task: go-install
@@ -63,6 +78,7 @@ tasks:
           VERSION: v2.3.2
 
   install-golangci-lint:
+    desc: install golangci-lint
     internal: true
     cmds:
       - task: go-install
@@ -71,6 +87,7 @@ tasks:
           VERSION: v1.61.0
 
   install-gotestsum:
+    desc: install gotestsum
     internal: true
     cmds:
       - task: go-install
@@ -79,8 +96,15 @@ tasks:
           VERSION: v1.11.0
 
   go-install:
+    desc: go install
     internal: true
     env:
       GOBIN: "{{.ROOT_DIR}}/.ext/gobin"
     cmds:
       - go install {{.PACKAGE}}@{{.VERSION}}
+
+  help:
+    desc: list all commands
+    cmds:
+      - cmd: task --list-all --sort none
+        silent: true
