@@ -31,11 +31,10 @@ scheduler:
 
 ```
 docker run -ti \
---platform=linux/amd64 \
 --name auth0-gw \
 --rm \
 -p 8383:8383 \
 -v $PWD:/cfg \
--v $PWD:/tmpl \
-ghcr.io/aserto-dev/auth0-gw:v0.0.0-amd64 run --config=/cfg/config.yaml --template=/tmpl/transform.tmpl
+-v $PWD/templates:/tmpl \
+ghcr.io/aserto-dev/auth0-gw:latest run --config=/cfg/config.yaml --template=/tmpl/transform.tmpl
 ```
